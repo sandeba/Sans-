@@ -1,0 +1,43 @@
+
+name: Build KDS Android POS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract POS project
+        run: |
+          unzip -o kds_pos_android_phone_package.zip -d /tmp/kds
+          cp -a /tmp/kds/kds_pos/. .
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Generate Android files
+        run: flutter create . --platforms=android --org ke.co.kds
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KDS-POS-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
